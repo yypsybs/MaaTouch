@@ -176,4 +176,20 @@ public final class ControlMessage {
         this.injectMode = injectMode;
         return this;
     }
+
+    @Override
+    public String toString() {
+        return "ControlMessage{" +
+                "type=" + type +
+                ", pointerId=" + pointerId +
+                ", pressure=" + pressure +
+                ", point=" + point +
+                ", millis=" + millis +
+                ", keycode=" + keycode +
+                ", repeat=" + repeat +
+                ", metaState=" + metaState +
+                ", text='" + text + '\'' +
+                ", injectMode=" + injectMode +
+                '}';
+    }
 }

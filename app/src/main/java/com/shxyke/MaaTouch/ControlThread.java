@@ -33,6 +33,7 @@ public class ControlThread {
     }
 
     public void handleMessage(ControlMessage msg, Integer subQueueInjectMode) {
+        Ln.i(String.format("handleMessage %s with subQueueInjectMode %d", msg, subQueueInjectMode));
         switch (msg.getType()) {
             case ControlMessage.TYPE_EVENT_TOUCH_RESET:
                 controller.resetAll(subQueueInjectMode == null

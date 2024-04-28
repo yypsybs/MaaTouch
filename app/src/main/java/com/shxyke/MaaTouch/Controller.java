@@ -44,7 +44,10 @@ public class Controller {
     }
 
     private boolean injectEvent(InputEvent event, int injectMode) {
-        return serviceManager.getInputManager().injectInputEvent(event, injectMode);
+        Ln.i(String.format("injectEvent %s with injectMode %s  start", event, injectMode));
+        boolean result = serviceManager.getInputManager().injectInputEvent(event, injectMode);
+        Ln.i(String.format("injectEvent %s with injectMode %s  end", event, injectMode));
+        return result;
     }
 
     public void resetAll(int injectMode) {
