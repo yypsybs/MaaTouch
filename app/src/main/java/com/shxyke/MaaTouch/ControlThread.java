@@ -83,9 +83,13 @@ public class ControlThread {
         while (true) {
             try {
                 QueueWithInjectMode<ControlMessage> subqueue = queue.take();
+                if (subqueue.isEmpty()) {
+                    continue;
+                }
                 while (!subqueue.isEmpty()) {
                     handleMessage(subqueue.poll(), subqueue.getInjectMode());
                 }
+                System.out.println("done");
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
