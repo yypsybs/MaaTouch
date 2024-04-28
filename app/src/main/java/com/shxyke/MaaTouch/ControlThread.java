@@ -35,7 +35,8 @@ public class ControlThread {
     public void handleMessage(ControlMessage msg, Integer subQueueInjectMode) {
         switch (msg.getType()) {
             case ControlMessage.TYPE_EVENT_TOUCH_RESET:
-                controller.resetAll(msg.getInjectMode());
+                controller.resetAll(subQueueInjectMode == null
+                        ? msg.getInjectMode() : subQueueInjectMode);
                 break;
             case ControlMessage.TYPE_EVENT_TOUCH_DOWN:
                 controller.injectTouchDown(
@@ -81,8 +82,6 @@ public class ControlThread {
         while (true) {
             try {
                 QueueWithInjectMode<ControlMessage> subqueue = queue.take();
-                // 尝试处理第一条
-
                 while (!subqueue.isEmpty()) {
                     handleMessage(subqueue.poll(), subqueue.getInjectMode());
                 }
