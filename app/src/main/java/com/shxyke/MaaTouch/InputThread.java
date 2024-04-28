@@ -223,6 +223,7 @@ public class InputThread extends Thread {
             String s;
             try {
                 s = stdin.readLine();
+                System.out.println("readLine : " + s);
                 if (s.length() != 0) {
                     parseInput(s);
                 }
