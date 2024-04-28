@@ -8,26 +8,24 @@ public class ControlThread {
 
     private final LinkedBlockingQueue<Queue<ControlMessage>> queue;
     private final Controller controller;
-    private final HashMap<Integer,KeyThread> KeyThreads;
+    private final HashMap<Integer, KeyThread> KeyThreads;
 
     public ControlThread(LinkedBlockingQueue<Queue<ControlMessage>> queue, Controller controller) {
         this.queue = queue;
         this.controller = controller;
         KeyThreads = new HashMap<>();
     }
-    public void KeyDown(int key)
-    {
-        if(!KeyThreads.containsKey(key))
-        {
-            KeyThread thread = new KeyThread(this.controller,key);
+
+    public void KeyDown(int key, int injectMode) {
+        if (!KeyThreads.containsKey(key)) {
+            KeyThread thread = new KeyThread(this.controller, key, injectMode);
             thread.start();
-            KeyThreads.put(key,thread);
+            KeyThreads.put(key, thread);
         }
     }
-    public void KeyUp(int key)
-    {
-        if(KeyThreads.containsKey(key))
-        {
+
+    public void KeyUp(int key) {
+        if (KeyThreads.containsKey(key)) {
             KeyThread thread = KeyThreads.get(key);
             thread.stopThread();
             KeyThreads.remove(key);
@@ -37,28 +35,30 @@ public class ControlThread {
     public void handleMessage(ControlMessage msg) {
         switch (msg.getType()) {
             case ControlMessage.TYPE_EVENT_TOUCH_RESET:
-                controller.resetAll();
+                controller.resetAll(msg.getInjectMode());
                 break;
             case ControlMessage.TYPE_EVENT_TOUCH_DOWN:
-                controller.injectTouchDown(msg.getPointerId(), msg.getPoint(), msg.getPressure());
+                controller.injectTouchDown(
+                        msg.getPointerId(), msg.getPoint(), msg.getPressure(), msg.getInjectMode());
                 break;
             case ControlMessage.TYPE_EVENT_TOUCH_MOVE:
-                controller.injectTouchMove(msg.getPointerId(), msg.getPoint(), msg.getPressure());
+                controller.injectTouchMove(msg.getPointerId(), msg.getPoint(), msg.getPressure(),
+                        msg.getInjectMode());
                 break;
             case ControlMessage.TYPE_EVENT_TOUCH_UP:
-                controller.injectTouchUp(msg.getPointerId());
+                controller.injectTouchUp(msg.getPointerId(), msg.getInjectMode());
                 break;
             case ControlMessage.TYPE_EVENT_KEY_DOWN:
-                KeyDown(msg.getKeycode());
+                KeyDown(msg.getKeycode(), msg.getInjectMode());
                 break;
             case ControlMessage.TYPE_EVENT_KEY_UP:
                 KeyUp(msg.getKeycode());
                 break;
             case ControlMessage.TYPE_EVENT_KEY:
-                controller.pressReleaseKeycode(msg.getKeycode());
+                controller.pressReleaseKeycode(msg.getKeycode(), msg.getInjectMode());
                 break;
             case ControlMessage.TYPE_EVENT_TEXT:
-                controller.setClipboard(msg.getText());
+                controller.setClipboard(msg.getText(), msg.getInjectMode());
                 break;
             case ControlMessage.TYPE_EVENT_WAIT:
                 try {

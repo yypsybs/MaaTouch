@@ -47,11 +47,12 @@ public class Controller {
         return serviceManager.getInputManager().injectInputEvent(event, injectMode);
     }
 
-    public void resetAll() {
+    public void resetAll(int injectMode) {
         int count = pointersState.size();
         for (int i = 0; i < count; ++i) {
             Pointer pointer = pointersState.get(0);
-            this.injectTouch(MotionEvent.ACTION_UP, pointer.getId(), pointer.getPoint(), 0);
+            this.injectTouch(MotionEvent.ACTION_UP, pointer.getId(), pointer.getPoint(), 0,
+                    injectMode);
         }
     }
 
@@ -78,52 +79,91 @@ public class Controller {
         }
         return clipboardManager.setText(text);
     }
+
     public boolean pressReleaseKeycode(int keyCode) {
-        return injectKeyEvent(KeyEvent.ACTION_DOWN, keyCode, 0, 0)
-                && injectKeyEvent(KeyEvent.ACTION_UP, keyCode, 0, 0);
+        return pressReleaseKeycode(keyCode, InputManager.INJECT_MODE_ASYNC);
     }
+
+    public boolean pressReleaseKeycode(int keyCode, int injectMode) {
+        return injectKeyEvent(KeyEvent.ACTION_DOWN, keyCode, 0, 0, injectMode)
+                && injectKeyEvent(KeyEvent.ACTION_UP, keyCode, 0, 0, injectMode);
+    }
+
     public boolean setClipboard(String text) {
+        return setClipboard(text, InputManager.INJECT_MODE_ASYNC);
+    }
+    public boolean setClipboard(String text, int injectMode) {
         boolean ok = setClipboardText(text);
         if (ok && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            pressReleaseKeycode(KeyEvent.KEYCODE_PASTE);
+            pressReleaseKeycode(KeyEvent.KEYCODE_PASTE, injectMode);
         }
         return ok;
     }
 
     public boolean injectKeyDown(int keyCode, int repeat, int metaState) {
-        return injectKeyEvent(MotionEvent.ACTION_DOWN, keyCode, repeat, metaState);
+        return injectKeyDown(keyCode, repeat, metaState, InputManager.INJECT_MODE_ASYNC);
+    }
+
+    public boolean injectKeyDown(int keyCode, int repeat, int metaState, int injectMode) {
+        return injectKeyEvent(MotionEvent.ACTION_DOWN, keyCode, repeat, metaState, injectMode);
     }
 
     public boolean injectKeyUp(int keyCode, int repeat, int metaState) {
-        return injectKeyEvent(MotionEvent.ACTION_UP, keyCode, repeat, metaState);
+        return injectKeyUp(keyCode, repeat, metaState, InputManager.INJECT_MODE_ASYNC);
+    }
+
+    public boolean injectKeyUp(int keyCode, int repeat, int metaState, int injectMode) {
+        return injectKeyEvent(MotionEvent.ACTION_UP, keyCode, repeat, metaState, injectMode);
     }
 
     public boolean injectKeyEvent(int action, int keyCode, int repeat, int metaState) {
+        return injectKeyEvent(action, keyCode, repeat, metaState, InputManager.INJECT_MODE_ASYNC);
+    }
+
+    public boolean injectKeyEvent(int action, int keyCode, int repeat, int metaState, int injectMode) {
         long now = SystemClock.uptimeMillis();
         KeyEvent event = new KeyEvent(now, now, action, keyCode, repeat, metaState, KeyCharacterMap.VIRTUAL_KEYBOARD, 0, 0,
                 InputDevice.SOURCE_KEYBOARD);
-        return injectEvent(event, InputManager.INJECT_MODE_ASYNC);
+        return injectEvent(event, injectMode);
     }
 
     public boolean injectTouchDown(long pointerId, Point point, float pressure) {
-        return this.injectTouch(MotionEvent.ACTION_DOWN, pointerId, point, pressure);
+        return injectTouchDown(pointerId, point, pressure, InputManager.INJECT_MODE_ASYNC);
+    }
+
+    public boolean injectTouchDown(long pointerId, Point point, float pressure, int injectMode) {
+        return this.injectTouch(MotionEvent.ACTION_DOWN, pointerId, point, pressure, injectMode);
     }
 
     public boolean injectTouchMove(long pointerId, Point point, float pressure) {
-        return this.injectTouch(MotionEvent.ACTION_MOVE, pointerId, point, pressure);
+        return injectTouchMove(pointerId, point, pressure, InputManager.INJECT_MODE_ASYNC);
+    }
+
+    public boolean injectTouchMove(long pointerId, Point point, float pressure, int injectMode) {
+        return this.injectTouch(MotionEvent.ACTION_MOVE, pointerId, point, pressure, injectMode);
     }
 
     public boolean injectTouchUp(long pointerId) {
+        return injectTouchUp(pointerId, InputManager.INJECT_MODE_ASYNC);
+    }
+
+    public boolean injectTouchUp(long pointerId, int injectMode) {
         int pointerIndex = pointersState.getPointerIndex(pointerId);
         if (pointerIndex == -1) {
             Ln.w("No such pointer");
             return false;
         }
         Pointer pointer = pointersState.get(pointerIndex);
-        return this.injectTouch(MotionEvent.ACTION_UP, pointerId, pointer.getPoint(), 0);
+        return this.injectTouch(MotionEvent.ACTION_UP, pointerId, pointer.getPoint(), 0,
+                injectMode);
     }
 
     public boolean injectTouch(int action, long pointerId, Point point, float pressure) {
+        return injectTouch(action, pointerId, point, pressure, InputManager.INJECT_MODE_ASYNC);
+    }
+
+    public boolean injectTouch(int action, long pointerId, Point point, float pressure,
+                               int injectMode) {
         long now = SystemClock.uptimeMillis();
 
         if (point == null) {
@@ -150,15 +190,19 @@ public class Controller {
         } else {
             // secondary pointers must use ACTION_POINTER_* ORed with the pointerIndex
             if (action == MotionEvent.ACTION_UP) {
-                action = MotionEvent.ACTION_POINTER_UP | (pointerIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT);
+                action = MotionEvent.ACTION_POINTER_UP
+                        | (pointerIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT);
             } else if (action == MotionEvent.ACTION_DOWN) {
-                action = MotionEvent.ACTION_POINTER_DOWN | (pointerIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT);
+                action = MotionEvent.ACTION_POINTER_DOWN
+                        | (pointerIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT);
             }
         }
 
         MotionEvent event = MotionEvent
-                .obtain(lastTouchDown, now, action, pointerCount, pointerProperties, pointerCoords, 0, 0, 1f, 1f, DEFAULT_DEVICE_ID, 0,
+                .obtain(lastTouchDown, now, action, pointerCount, pointerProperties, pointerCoords,
+                        0, 0, 1f, 1f, DEFAULT_DEVICE_ID, 0,
                         DEFAULT_SOURCE, 0);
-        return injectEvent(event, InputManager.INJECT_MODE_ASYNC);
+        return injectEvent(event, injectMode);
     }
+
 }

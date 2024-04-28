@@ -24,6 +24,7 @@ public final class ControlMessage {
     private int repeat;
     private int metaState;
     private String text;
+    private int injectMode;
 
     private ControlMessage(int type) {
         this.type = type;
@@ -34,6 +35,13 @@ public final class ControlMessage {
         msg.text = text;
         return msg;
     }
+
+    public static ControlMessage createKeyDownEvent(int keycode, int repeat, int metaState,
+                                                    int injectMode) {
+        return createKeyDownEvent(keycode, repeat, metaState)
+                .setInjectMode(injectMode);
+    }
+
     public static ControlMessage createKeyDownEvent(int keycode, int repeat, int metaState) {
         ControlMessage msg = new ControlMessage(TYPE_EVENT_KEY_DOWN);
         msg.keycode = keycode;
@@ -41,6 +49,12 @@ public final class ControlMessage {
         msg.metaState = metaState;
         return msg;
     }
+
+    public static ControlMessage createKeyEvent(int keycode, int injectMode) {
+        return createKeyEvent(keycode)
+                .setInjectMode(injectMode);
+    }
+
     public static ControlMessage createKeyEvent(int keycode) {
         ControlMessage msg = new ControlMessage(TYPE_EVENT_KEY);
         msg.keycode = keycode;
@@ -49,12 +63,25 @@ public final class ControlMessage {
         return msg;
     }
 
+    public static ControlMessage createKeyUpEvent(int keycode, int repeat, int metaState,
+                                                  int injectMode) {
+        return createKeyUpEvent(keycode, repeat, metaState)
+                .setInjectMode(injectMode);
+    }
+
+
     public static ControlMessage createKeyUpEvent(int keycode, int repeat, int metaState) {
         ControlMessage msg = new ControlMessage(TYPE_EVENT_KEY_UP);
         msg.keycode = keycode;
         msg.repeat = repeat;
         msg.metaState = metaState;
         return msg;
+    }
+
+    public static ControlMessage createTouchDownEvent(long pointerId, Point point, float pressure,
+                                                      int injectMode) {
+        return createTouchDownEvent(pointerId, point, pressure)
+                .setInjectMode(injectMode);
     }
 
     public static ControlMessage createTouchDownEvent(long pointerId, Point point, float pressure) {
@@ -65,10 +92,21 @@ public final class ControlMessage {
         return msg;
     }
 
+    public static ControlMessage createTouchUpEvent(long pointerId, int injectMode) {
+        return createTouchUpEvent(pointerId)
+                .setInjectMode(injectMode);
+    }
+
     public static ControlMessage createTouchUpEvent(long pointerId) {
         ControlMessage msg = new ControlMessage(TYPE_EVENT_TOUCH_UP);
         msg.pointerId = pointerId;
         return msg;
+    }
+
+    public static ControlMessage createTouchMoveEvent(long pointerId, Point point, float pressure,
+                                                      int injectMode) {
+        return createTouchMoveEvent(pointerId, point, pressure)
+                .setInjectMode(injectMode);
     }
 
     public static ControlMessage createTouchMoveEvent(long pointerId, Point point, float pressure) {
@@ -83,6 +121,10 @@ public final class ControlMessage {
         ControlMessage msg = new ControlMessage(TYPE_EVENT_WAIT);
         msg.millis = milis;
         return msg;
+    }
+
+    public static ControlMessage createEmpty(int type, int injectMode) {
+        return createEmpty(type).setInjectMode(injectMode);
     }
 
     public static ControlMessage createEmpty(int type) {
@@ -124,5 +166,14 @@ public final class ControlMessage {
 
     public int getRepeat() {
         return repeat;
+    }
+
+    public int getInjectMode() {
+        return injectMode;
+    }
+
+    public ControlMessage setInjectMode(int injectMode) {
+        this.injectMode = injectMode;
+        return this;
     }
 }
