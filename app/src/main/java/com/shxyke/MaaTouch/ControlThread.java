@@ -1,16 +1,16 @@
 package com.shxyke.MaaTouch;
 
 import java.util.HashMap;
-import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class ControlThread {
 
-    private final LinkedBlockingQueue<Queue<ControlMessage>> queue;
+    private final LinkedBlockingQueue<QueueWithInjectMode<ControlMessage>> queue;
     private final Controller controller;
     private final HashMap<Integer, KeyThread> KeyThreads;
 
-    public ControlThread(LinkedBlockingQueue<Queue<ControlMessage>> queue, Controller controller) {
+    public ControlThread(LinkedBlockingQueue<QueueWithInjectMode<ControlMessage>> queue,
+                         Controller controller) {
         this.queue = queue;
         this.controller = controller;
         KeyThreads = new HashMap<>();
@@ -32,33 +32,38 @@ public class ControlThread {
         }
     }
 
-    public void handleMessage(ControlMessage msg) {
+    public void handleMessage(ControlMessage msg, Integer subQueueInjectMode) {
         switch (msg.getType()) {
             case ControlMessage.TYPE_EVENT_TOUCH_RESET:
                 controller.resetAll(msg.getInjectMode());
                 break;
             case ControlMessage.TYPE_EVENT_TOUCH_DOWN:
                 controller.injectTouchDown(
-                        msg.getPointerId(), msg.getPoint(), msg.getPressure(), msg.getInjectMode());
+                        msg.getPointerId(), msg.getPoint(), msg.getPressure(),
+                        subQueueInjectMode == null ? msg.getInjectMode() : subQueueInjectMode);
                 break;
             case ControlMessage.TYPE_EVENT_TOUCH_MOVE:
                 controller.injectTouchMove(msg.getPointerId(), msg.getPoint(), msg.getPressure(),
-                        msg.getInjectMode());
+                        subQueueInjectMode == null ? msg.getInjectMode() : subQueueInjectMode);
                 break;
             case ControlMessage.TYPE_EVENT_TOUCH_UP:
-                controller.injectTouchUp(msg.getPointerId(), msg.getInjectMode());
+                controller.injectTouchUp(msg.getPointerId(), subQueueInjectMode == null
+                        ? msg.getInjectMode() : subQueueInjectMode);
                 break;
             case ControlMessage.TYPE_EVENT_KEY_DOWN:
-                KeyDown(msg.getKeycode(), msg.getInjectMode());
+                KeyDown(msg.getKeycode(), subQueueInjectMode == null
+                        ? msg.getInjectMode() : subQueueInjectMode);
                 break;
             case ControlMessage.TYPE_EVENT_KEY_UP:
                 KeyUp(msg.getKeycode());
                 break;
             case ControlMessage.TYPE_EVENT_KEY:
-                controller.pressReleaseKeycode(msg.getKeycode(), msg.getInjectMode());
+                controller.pressReleaseKeycode(msg.getKeycode(), subQueueInjectMode == null
+                        ? msg.getInjectMode() : subQueueInjectMode);
                 break;
             case ControlMessage.TYPE_EVENT_TEXT:
-                controller.setClipboard(msg.getText(), msg.getInjectMode());
+                controller.setClipboard(msg.getText(), subQueueInjectMode == null
+                        ? msg.getInjectMode() : subQueueInjectMode);
                 break;
             case ControlMessage.TYPE_EVENT_WAIT:
                 try {
@@ -75,9 +80,11 @@ public class ControlThread {
     public void run() {
         while (true) {
             try {
-                Queue<ControlMessage> subqueue = queue.take();
+                QueueWithInjectMode<ControlMessage> subqueue = queue.take();
+                // 尝试处理第一条
+
                 while (!subqueue.isEmpty()) {
-                    handleMessage(subqueue.poll());
+                    handleMessage(subqueue.poll(), subqueue.getInjectMode());
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();

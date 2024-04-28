@@ -2,8 +2,6 @@ package com.shxyke.MaaTouch;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -11,7 +9,7 @@ import java.util.regex.Pattern;
 public class InputThread extends Thread {
 
     private final BufferedReader stdin;
-    private final LinkedBlockingQueue<Queue<ControlMessage>> queue;
+    private final LinkedBlockingQueue<QueueWithInjectMode<ControlMessage>> queue;
 
     private boolean isRunning = true;
 
@@ -28,11 +26,14 @@ public class InputThread extends Thread {
     private static final Pattern RESET_PATTERN_SYNC = Pattern.compile("r\\s+(\\d+)");
     private static final Pattern RESET_PATTERN_ASYNC = Pattern.compile("r");
 
+    private static final Pattern SET_INJECT_MODE = Pattern.compile("s\\s+(\\d+)");
+
     private static final Pattern TEXT_PATTERN = Pattern.compile("t\\s+(.+)");
 
-    private Queue<ControlMessage> subqueue = new LinkedList<>();
+    private QueueWithInjectMode<ControlMessage> subqueue = new QueueWithInjectMode<>();
 
-    public InputThread(BufferedReader stdin, LinkedBlockingQueue<Queue<ControlMessage>> queue) {
+    public InputThread(BufferedReader stdin,
+                       LinkedBlockingQueue<QueueWithInjectMode<ControlMessage>> queue) {
         this.stdin = stdin;
         this.queue = queue;
     }
@@ -137,7 +138,7 @@ public class InputThread extends Thread {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            this.subqueue = new LinkedList<>();
+            this.subqueue = new QueueWithInjectMode<>();
         }
     }
 
@@ -167,6 +168,14 @@ public class InputThread extends Thread {
         }
     }
 
+    private void setInjectMode(String s) {
+        Matcher m = SET_INJECT_MODE.matcher(s);
+        if (m.find()) {
+            int mode = Integer.parseInt(m.group(1));
+            subqueue.setInjectMode(mode);
+        }
+    }
+
     private void parseText(String s) {
         Matcher m = TEXT_PATTERN.matcher(s);
         if (m.find()) {
@@ -177,6 +186,8 @@ public class InputThread extends Thread {
 
     private void parseInput(String s) {
         switch (s.charAt(0)) {
+            case 's':
+                setInjectMode(s);
             case 'c':
                 parseCommit(s);
                 break;

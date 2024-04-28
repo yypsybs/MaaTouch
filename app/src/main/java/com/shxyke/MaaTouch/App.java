@@ -3,13 +3,12 @@
  */
 package com.shxyke.MaaTouch;
 
-import com.shxyke.MaaTouch.wrappers.ServiceManager;
 import com.shxyke.MaaTouch.wrappers.DisplayManager;
+import com.shxyke.MaaTouch.wrappers.ServiceManager;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 
@@ -19,7 +18,8 @@ public class App {
     private static final ServiceManager SERVICE_MANAGER = new ServiceManager();
     private static final Controller CONTROLLER = new Controller(SERVICE_MANAGER);
     private static final DisplayManager DISPLAY_MANAGER = SERVICE_MANAGER.getDisplayManager();
-    private static final LinkedBlockingQueue<Queue<ControlMessage>> QUEUE = new LinkedBlockingQueue<>();
+    private static final LinkedBlockingQueue<QueueWithInjectMode<ControlMessage>> QUEUE
+            = new LinkedBlockingQueue<>();
 
     public String getGreeting(DisplayInfo displayInfo) {
         Size size = displayInfo.getSize();
