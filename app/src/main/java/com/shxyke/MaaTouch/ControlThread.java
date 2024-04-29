@@ -32,40 +32,33 @@ public class ControlThread {
         }
     }
 
-    public void handleMessage(ControlMessage msg, Integer subQueueInjectMode) {
-        Ln.i(String.format("handleMessage %s with subQueueInjectMode %d", msg, subQueueInjectMode));
+    public void handleMessage(ControlMessage msg) {
         switch (msg.getType()) {
             case ControlMessage.TYPE_EVENT_TOUCH_RESET:
-                controller.resetAll(subQueueInjectMode == null
-                        ? msg.getInjectMode() : subQueueInjectMode);
+                controller.resetAll(msg.getInjectMode());
                 break;
             case ControlMessage.TYPE_EVENT_TOUCH_DOWN:
                 controller.injectTouchDown(
-                        msg.getPointerId(), msg.getPoint(), msg.getPressure(),
-                        subQueueInjectMode == null ? msg.getInjectMode() : subQueueInjectMode);
+                        msg.getPointerId(), msg.getPoint(), msg.getPressure(), msg.getInjectMode());
                 break;
             case ControlMessage.TYPE_EVENT_TOUCH_MOVE:
                 controller.injectTouchMove(msg.getPointerId(), msg.getPoint(), msg.getPressure(),
-                        subQueueInjectMode == null ? msg.getInjectMode() : subQueueInjectMode);
+                        msg.getInjectMode());
                 break;
             case ControlMessage.TYPE_EVENT_TOUCH_UP:
-                controller.injectTouchUp(msg.getPointerId(), subQueueInjectMode == null
-                        ? msg.getInjectMode() : subQueueInjectMode);
+                controller.injectTouchUp(msg.getPointerId(), msg.getInjectMode());
                 break;
             case ControlMessage.TYPE_EVENT_KEY_DOWN:
-                KeyDown(msg.getKeycode(), subQueueInjectMode == null
-                        ? msg.getInjectMode() : subQueueInjectMode);
+                KeyDown(msg.getKeycode(), msg.getInjectMode());
                 break;
             case ControlMessage.TYPE_EVENT_KEY_UP:
                 KeyUp(msg.getKeycode());
                 break;
             case ControlMessage.TYPE_EVENT_KEY:
-                controller.pressReleaseKeycode(msg.getKeycode(), subQueueInjectMode == null
-                        ? msg.getInjectMode() : subQueueInjectMode);
+                controller.pressReleaseKeycode(msg.getKeycode(), msg.getInjectMode());
                 break;
             case ControlMessage.TYPE_EVENT_TEXT:
-                controller.setClipboard(msg.getText(), subQueueInjectMode == null
-                        ? msg.getInjectMode() : subQueueInjectMode);
+                controller.setClipboard(msg.getText(), msg.getInjectMode());
                 break;
             case ControlMessage.TYPE_EVENT_WAIT:
                 try {
@@ -87,10 +80,11 @@ public class ControlThread {
                     continue;
                 }
                 while (!subqueue.isEmpty()) {
-                    handleMessage(subqueue.poll(), subqueue.getInjectMode());
+                    handleMessage(subqueue.poll());
                 }
-                Ln.i("done");
-                System.out.println("done");
+                if (subqueue.getToken() != null) {
+                    System.out.println(subqueue.getToken());
+                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

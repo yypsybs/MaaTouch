@@ -26,7 +26,7 @@ public class InputThread extends Thread {
     private static final Pattern RESET_PATTERN_SYNC = Pattern.compile("r\\s+(\\d+)");
     private static final Pattern RESET_PATTERN_ASYNC = Pattern.compile("r");
 
-    private static final Pattern SET_INJECT_MODE = Pattern.compile("s\\s+(\\d+)");
+    private static final Pattern SET_INJECT_MODE = Pattern.compile("s\\s+(.+)");
 
     private static final Pattern TEXT_PATTERN = Pattern.compile("t\\s+(.+)");
 
@@ -168,11 +168,11 @@ public class InputThread extends Thread {
         }
     }
 
-    private void setInjectMode(String s) {
+    private void setToken(String s) {
         Matcher m = SET_INJECT_MODE.matcher(s);
         if (m.find()) {
-            int mode = Integer.parseInt(m.group(1));
-            subqueue.setInjectMode(mode);
+            String token = m.group(1);
+            subqueue.setToken(token);
         }
     }
 
@@ -187,7 +187,7 @@ public class InputThread extends Thread {
     private void parseInput(String s) {
         switch (s.charAt(0)) {
             case 's':
-                setInjectMode(s);
+                setToken(s);
             case 'c':
                 parseCommit(s);
                 break;
@@ -223,7 +223,7 @@ public class InputThread extends Thread {
             String s;
             try {
                 s = stdin.readLine();
-                Ln.i("readLine : " + s);
+//                Ln.i("readLine : " + s);
                 if (s.length() != 0) {
                     parseInput(s);
                 }

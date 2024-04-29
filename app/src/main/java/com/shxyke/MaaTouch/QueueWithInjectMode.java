@@ -4,14 +4,14 @@ import java.util.LinkedList;
 
 public class QueueWithInjectMode<C> extends LinkedList<C> {
 
-    private Integer injectMode;
+    private String token;
 
-    public Integer getInjectMode() {
-        return injectMode;
+    public String getToken() {
+        return token;
     }
 
-    public QueueWithInjectMode<C> setInjectMode(Integer injectMode) {
-        this.injectMode = injectMode;
+    public QueueWithInjectMode<C> setToken(String token) {
+        this.token = token;
         return this;
     }
 
